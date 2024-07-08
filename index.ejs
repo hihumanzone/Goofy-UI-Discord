@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discord Bot Dashboard</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #2c2f33;
+      display: flex;
+      flex-direction: column;
+      color: #ffffff;
+      overflow-wrap: anywhere;
+      word-wrap: anywhere;
+    }
+
+    .navbar {
+      background-color: #23272a;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 25px;
+    }
+    
+    #toggleSidebarButton {
+      background-color: #23272a;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    
+    #toggleSidebarButton:hover {
+      background-color: #2c2f33;
+    }
+
+    .navbar h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .container {
+      display: flex;
+      flex: 1;
+      height: calc(100% - 50px);
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      background-color: #2f3136;
+      width: 250px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+      
+    .sidebar.hidden {
+      display: none;
+    }
+    
+    .sidebar select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #000000;
+      color: #ffffff;
+    }
+    
+    #userListContainer {
+      flex-grow: 1;
+      overflow-y: auto;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    #userListContainer h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+      position: sticky;
+      top: 0;
+      background-color: #000;
+      text-align: center;
+    }
+    
+    #userList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    #userList li {
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #36393f;
+      margin: 0 5px 5px;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.3s;
+      cursor: pointer;
+    }
+    
+    #userList li:hover {
+      background-color: #3b3e45;
+    }
+    
+    #userList li .status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    
+    #userList .online { background-color: #43b581; }
+    #userList .dnd { background-color: #f04747; }
+    #userList .idle { background-color: #faa61a; }
+    #userList .offline { background-color: #747f8d; }
+    
+    .user-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .username {
+      flex-grow: 1;
+    }
+    
+    .user-id {
+      margin-top: 5px;
+      font-size: 12px;
+    }
+
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .message {
+      transition: background 0.5s ease, border-radius 0.5s ease;
+    }
+    
+    .highlight {
+      background: rgba(114, 137, 218, 0.2);
+      border-radius: 8px;
+    }
+
+    .message-list {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background-color: #36393f;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message-list div {
+      margin-bottom: 4px;
+    }
+
+    .message-list .message-author {
+      margin-top: 10px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+    }
+    
+    .message-list .message-author img {
+      border-radius: 50%;
+      margin-right: 10px;
+      width: 30px;
+      height: 30px;
+    }
+
+    .message-list .message-content {
+      margin-left: 40px;
+      color: #e5e6e7;
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+    
+    .message-loader {
+      display: flex;
+      justify-content: center;
+    }
+    
+    #loadMoreMsgButton {
+      padding: 6px 12px;
+      border-radius: 5px;
+      border: none;
+      background-color: #000;
+      color: #ffffff;
+      font-size: 16px;
+      cursor: pointer;
+      display: none;
+    }
+
+    .input-area {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 20px 20px 10px 20px;
+      background-color: #40444b;
+      border-top: 1px solid #23272a;
+    }
+    
+    .input-area form {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .input-area textarea {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      resize: none;
+      background-color: #99aab5;
+      color: #2c2f33;
+      font-size: 16px;
+      min-height: 30px;
+      max-height: 300px;
+      overflow: hidden;
+    }
+    
+    .input-area label {
+      margin-left: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #000000;
+      color: #ffffff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .input-area label:hover {
+      background-color: #222;
+    }
+    
+    .input-area input[type="file"] {
+      display: none;
+    }
+    
+    .input-area button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #000000;
+      color: #ffffff;
+      font-size: 16px;
+      margin-left: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .input-area button:hover {
+      background-color: #222;
+    }
+
+    .input-area .preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      gap: 10px;
+    }
+
+    .input-area .preview-container img, 
+    .input-area .preview-container video {
+      max-width: 150px;
+      max-height: 150px;
+      border-radius: 5px;
+    }
+
+    .input-area .preview-container .file-preview {
+      padding: 10px;
+      background-color: #5865f2;
+      color: white;
+      border-radius: 5px;
+    }
+    
+    .input-area .preview-container .remove-button {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 16px;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+    }
+    
+    .input-area .preview-container .file-preview-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .fullscreen-preview {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .fullscreen-preview img {
+      max-width: 90%;
+      max-height: 90%;
+    }
+    
+    .fullscreen-preview .close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 24px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .input-area #responseMessage {
+      color: #ff6b6b;
+      margin-left: 10px;
+    }
+
+    .sending-indicator {
+      display: none;
+      margin-left: 15px;
+    }
+    
+    .attachments-container {
+      margin-left: 40px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .attachment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px;
+    }
+
+    .attachment img, .attachment video, .attachment audio {
+      border-radius: 5px;
+      max-width: 300px;
+      max-height: 300px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+    }
+    
+    #attachment-link {
+      display: inline-block;
+      padding: 5px 10px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      background-color: rgba(0, 0, 0, 0.1);
+      text-decoration: none;
+    }
+    
+    img {
+      max-width: 300px;
+      max-height: 300px;
+    }
+
+    .attachment img {
+      max-height: 300px;
+      cursor: pointer;
+    }
+
+    .attachment video, .attachment audio {
+      width: 100%;
+    }
+    
+    /* Markdown elements styling */
+    blockquote {
+      color: #b0b2c7;
+      border-left: 4px solid #7289da;
+      border-radius: 4px;
+      padding: 5px 5px 5px 10px;
+      margin: 1em 0;
+      font-style: italic;
+      background-color: rgba(0, 0, 0, 0.15);
+    }
+
+    pre {
+      background-color: #45464a;
+      border-radius: 5px;
+      padding: 1em;
+      overflow-x: auto;
+      color: #dcdde1;
+      white-space: pre-wrap;
+    }
+    
+    code {
+      background-color: #2f3236;
+      border-radius: 3px;
+      padding: 2px 5px;
+      color: #dcdde1;
+    }
+    
+    pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1em 0;
+      color: #dcddde;
+    }
+    
+    th, td {
+      padding: 8px 12px;
+      border: 1px solid #42464d;
+    }
+    
+    th {
+      background-color: #32363c;
+      font-weight: bold;
+    }
+    
+    tr:nth-child(even) {
+      background-color: #2f3136;
+    }
+    
+    img.emoji {
+      width: 1em;
+      height: 1em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <h1>Welcome, <%= user.username %>!</h1>
+    <button id="toggleSidebarButton">☰</button>
+  </div>
+  <div class="container">
+    <div class="sidebar">
+      <label for="guildSelect">Select Server:</label>
+      <select id="guildSelect" name="guildId" required>
+        <option value="" disabled selected>Select Server:</option>
+        <% guilds.forEach(guild => { %>
+        <option value="<%= guild.id %>"><%= guild.name %></option>
+        <% }); %>
+      </select>
+      <label for="channelSelect">Select Channel</label>
+      <select id="channelSelect" name="channelId" required>
+        <option value="" disabled selected>Select Channel</option>
+      </select>
+      <div id="userListContainer">
+        <h3>Users</h3>
+        <ul id="userList"></ul>
+      </div>
+    </div>
+    <div class="chat-area">
+      <div class="message-loader">
+        <button id="loadMoreMsgButton">Load More Messages</button>
+      </div>
+      <div class="message-list" id="messageList"></div>
+      <div class="input-area">
+        <form id="messageForm">
+          <textarea id="messageTextarea" name="message" placeholder="Type your message..."></textarea>
+          <label for="attachmentInput">📎 (<span id="attachmentCounter">0</span>)</label>
+          <input type="file" id="attachmentInput" name="attachments" accept="*" multiple />
+          <button type="button" id="sendButton">⤴️</button>
+        </form>
+        <div id="responseMessage"></div>
+        <div class="sending-indicator" id="sendingIndicator">Sending...</div>
+        <div class="preview-container" id="previewContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fullscreen-preview" id="fullscreenPreview">
+    <span class="close" id="fullscreenClose">&times;</span>
+    <img src="" id="fullscreenImage" />
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const md = window.markdownit({
+      breaks: true
+    });
+    let currentChannelId = null;
+    let previousUserId = null;
+    let lastPreviousUserId = null;
+    const socket = io();
+
+    document.querySelector('select[name="guildId"]').addEventListener('change', async function () {
+      const guildId = this.value;
+      const res = await fetch(`/get-channels?guildId=${guildId}`);
+      const channels = await res.json();
+      const channelSelect = document.querySelector('select[name="channelId"]');
+      channelSelect.innerHTML = '<option value="" disabled selected>Select Channel</option>';
+      channels.forEach(channel => {
+        const option = document.createElement('option');
+        option.value = channel.id;
+        option.textContent = channel.name;
+        channelSelect.appendChild(option);
+      });
+    });
+    
+    let userUpdateInterval = null;
+    let oldestMessageId = null;
+    
+    document.querySelector('select[name="channelId"]').addEventListener('change', async function() {
+      if (userUpdateInterval) {
+        clearInterval(userUpdateInterval);
+      }
+    
+      if (currentChannelId) {
+        socket.emit('leaveChannel', currentChannelId);
+      }
+    
+      const channelId = this.value;
+      currentChannelId = channelId;
+      previousUserId = null;
+      oldestMessageId = null;
+    
+      const loadMoreMsgButton = document.getElementById('loadMoreMsgButton');
+    
+      const resMessages = await fetch(`/get-messages?channelId=${channelId}`);
+      const messages = await resMessages.json();
+      const messageList = document.getElementById('messageList');
+    
+      messageList.innerHTML = '';
+      messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)).forEach(msg => {
+        const messageDiv = renderMessage(msg);
+        messageList.appendChild(messageDiv);
+      });
+    
+      if (messages.length > 0) {
+        oldestMessageId = messages[0].id;
+        lastPreviousUserId = messages[messages.length - 1].userId;
+        loadMoreMsgButton.style.display = 'block';
+        loadMoreMsgButton.disabled = false;
+      }
+    
+      messageList.scrollTop = messageList.scrollHeight;
+      socket.emit('joinChannel', channelId);
+    
+      await updateUserList();
+    
+      userUpdateInterval = setInterval(updateUserList, 10000);
+    });
+    
+    document.getElementById('loadMoreMsgButton').addEventListener('click', async function() {
+      if (!currentChannelId || !oldestMessageId) return;
+    
+      const resMessages = await fetch(`/get-messages?channelId=${currentChannelId}&before=${oldestMessageId}`);
+      const messages = await resMessages.json();
+      if (messages.length === 0) {
+        this.disabled = true;
+        return;
+      }
+    
+      const messageList = document.getElementById('messageList');
+      const initialScrollHeight = messageList.scrollHeight;
+    
+      messages.forEach(msg => {
+        const showAuthor = lastPreviousUserId !== msg.userId;
+        lastPreviousUserId = msg.userId;
+        const messageDiv = renderMessage(msg, true);
+        messageList.insertBefore(messageDiv, messageList.firstChild);
+      });
+    
+      oldestMessageId = messages[messages.length - 1].id;
+      messageList.scrollTop = messageList.scrollHeight - initialScrollHeight;
+    });
+    
+    async function updateUserList() {
+      if (!currentChannelId) return;
+    
+      const resUsers = await fetch(`/get-channel-users?channelId=${currentChannelId}`);
+      const users = await resUsers.json();
+      console.log(users);
+      renderUserList(users);
+    }
+    
+    function renderUserList(users) {
+      const userList = document.getElementById('userList');
+      userList.innerHTML = '';
+    
+      users.forEach(user => {
+        const userItem = document.createElement('li');
+        userItem.innerHTML = `
+          <div class="status ${user.status}"></div>
+          <div class="user-info">
+            <span class="username">${user.username}</span>
+            <span class="user-id" style="display: none;">ID: ${user.id}</span>
+          </div>
+        `;
+    
+        userItem.addEventListener('click', () => {
+          const userIdElement = userItem.querySelector('.user-id');
+          userIdElement.style.display = userIdElement.style.display === 'none' ? 'block' : 'none';
+        });
+    
+        userList.appendChild(userItem);
+      });
+    }
+
+    function createAttachmentsHTML(attachments) {
+      return `<div class="attachments-container">` + (attachments || []).map(a => {
+        const ext = a.name.split('.').pop().toLowerCase();
+        if (['jpeg', 'jpg', 'png', 'gif', 'bmp'].includes(ext)) {
+          return `<div class="attachment"><img src="${a.url}" alt="${a.name}" onclick="showFullscreenPreview('${a.url}')"></div>`;
+        } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+          return `<div class="attachment"><video controls><source src="${a.url}" type="video/${ext}"></video></div>`;
+        } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+          return `<div class="attachment"><audio controls><source src="${a.url}" type="audio/${ext}"></audio></div>`;
+        } else {
+          return `<div class="attachment"><a href="${a.url}" id="attachment-link" target="_blank">${a.name} 📎</a></div>`;
+        }
+      }).join('') + `</div>`;
+    }
+    
+    function createEmbedsHTML(embeds) {
+      return (embeds || []).map(embed => `
+        <div class="embed" style="border-left: 5px solid ${embed.color || '#7289da'}; padding: 10px; margin: 5px 0 10px 35px; border-radius: 8px; background-color: rgba(0, 0, 0, 0.05);">
+          ${embed.author ? `<div><strong>${embed.author}</strong></div>` : ''}
+          ${embed.title ? `<div><strong>${embed.title}</strong></div>` : ''}
+          ${embed.description ? `<div>${md.render(embed.description)}</div>` : ''}
+          ${embed.image ? `<div class="attachment"><img src="${embed.image}" alt="Embed image" style="margin-left: 10px;" onclick="showFullscreenPreview('${embed.image}')"></div>` : ''}
+          ${embed.thumbnail ? `<div class="attachment"><img src="${embed.thumbnail}" alt="Embed thumbnail" style="margin-left: 10px;" onclick="showFullscreenPreview('${embed.thumbnail}')"></div>` : ''}
+          ${(embed.fields || []).map(field => `
+            <div>${md.render(field.name)}${md.render(field.value)}</div>`).join('') || ''}
+        </div>
+      `).join('');
+    }
+    
+    document.getElementById('attachmentInput').addEventListener('change', function() {
+      const previewContainer = document.getElementById('previewContainer');
+      previewContainer.innerHTML = '';
+    
+      const attachmentCounter = document.getElementById('attachmentCounter');
+    
+      if (this.files.length > 10) {
+        alert("You can only attach up to 10 files.");
+        this.value = '';
+        attachmentCounter.textContent = '0';
+        previewContainer.innerHTML = '';
+        return;
+      }
+    
+      Array.from(this.files).forEach((file, index) => {
+        const filePreviewContainer = document.createElement('div');
+        filePreviewContainer.classList.add('file-preview-container');
+    
+        const removeButton = document.createElement('button');
+        removeButton.classList.add('remove-button');
+        removeButton.innerHTML = '&times;';
+        removeButton.addEventListener('click', function() {
+          const dt = new DataTransfer();
+          Array.from(attachmentInput.files)
+            .filter((_, i) => i !== index)
+            .forEach(file => dt.items.add(file));
+    
+          attachmentInput.files = dt.files;
+          filePreviewContainer.remove();
+          attachmentCounter.textContent = attachmentInput.files.length;
+        });
+    
+        if (file.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          img.addEventListener('click', () => showFullscreenPreview(img.src));
+          filePreviewContainer.appendChild(img);
+        } else if (file.type.startsWith('video/')) {
+          const video = document.createElement('video');
+          video.src = URL.createObjectURL(file);
+          video.controls = true;
+          filePreviewContainer.appendChild(video);
+        } else {
+          const fileName = document.createElement('div');
+          fileName.classList.add('file-preview');
+          fileName.textContent = file.name;
+          filePreviewContainer.appendChild(fileName);
+        }
+    
+        filePreviewContainer.appendChild(removeButton);
+        previewContainer.appendChild(filePreviewContainer);
+      });
+    
+      attachmentCounter.textContent = this.files.length;
+    });
+    
+    function showFullscreenPreview(src) {
+      const fullscreenPreview = document.getElementById('fullscreenPreview');
+      const fullscreenImage = document.getElementById('fullscreenImage');
+      fullscreenImage.src = src;
+      fullscreenPreview.style.display = 'flex';
+    }
+    
+    document.getElementById('fullscreenClose').addEventListener('click', () => {
+      const fullscreenPreview = document.getElementById('fullscreenPreview');
+      fullscreenPreview.style.display = 'none';
+    });
+    
+    function createReplyHTML(replyTo) {
+      return replyTo ? `
+        <div class="replyTo" style="
+          margin-left: 30px; 
+          border-left: 4px solid #7289da; 
+          padding: 10px 10px 5px 10px;
+          background-color: rgba(114, 137, 218, 0.1); 
+          border-radius: 8px;
+          ">
+          <strong>Replying to:</strong> <span data-reply-id="${replyTo.id}" class="reply-link" style="cursor: pointer; color: #7289da;">${replyTo.username}</span>
+          <div>${md.render(replyTo.content)}</div>
+        </div>
+      ` : '';
+    }
+    
+    function applyReplyLinkBehavior(messageDiv) {
+      messageDiv.querySelectorAll('.reply-link').forEach(replyLink => {
+        replyLink.addEventListener('click', function() {
+          const replyId = this.dataset.replyId;
+          const targetMessage = document.querySelector(`[data-message-id="${replyId}"]`);
+          if (targetMessage) {
+            targetMessage.scrollIntoView({ behavior: 'smooth' });
+            targetMessage.classList.add('highlight');
+            setTimeout(() => targetMessage.classList.remove('highlight'), 2000);
+          } else {
+            this.style.color = 'red';
+            setTimeout(() => this.style.color = '#7289da', 2000);
+          }
+        });
+      });
+    }
+    
+    function renderReactionsHTML(reactions) {
+      if (!reactions || reactions.length === 0) return '';
+      
+      return `
+        <div class="message-reactions" style="margin: 0 0 10px 40px; display: flex; gap: 5px;">
+          ${reactions.map(reaction => `
+            <span class="reaction" style="border: 2px solid rgba(0, 0, 0, 0.2); border-top: none; padding: 3px; border-radius: 5px; background-color: rgba(0, 0, 0, 0.1);">
+              ${reaction.emoji} ${reaction.count} (${reaction.usernames.join(', ')})
+            </span>
+          `).join('')}
+        </div>
+      `;
+    }
+    
+    function renderMessageContent(msg, showAuthor = true) {
+      const attachmentsHTML = createAttachmentsHTML(msg.attachments);
+      const embedsHTML = createEmbedsHTML(msg.embeds);
+      const replyHTML = createReplyHTML(msg.replyTo);
+      const reactionsHTML = renderReactionsHTML(msg.reactions);
+    
+      let authorHTML = '';
+      if (showAuthor) {
+        authorHTML = `
+          <div class="message-author">
+            <img src="${msg.avatarURL}" alt="${msg.username}" width="30" height="30"> ${msg.username} (${msg.userId}) ${msg.isBot ? '(Bot)' : ''}
+          </div>
+        `;
+      }
+    
+      return `
+        ${authorHTML}
+        ${replyHTML}
+        <div class="message-content">${md.render(msg.content)}</div>
+        ${attachmentsHTML}
+        ${embedsHTML}
+        ${reactionsHTML}
+      `;
+    }
+    
+    function renderMessage(msg, x) {
+      let showAuthor;
+      if (x) {
+        showAuthor = true;
+      } else {
+        showAuthor = previousUserId !== msg.userId;
+        previousUserId = msg.userId;
+      }
+      const messageDiv = document.createElement('div');
+      messageDiv.dataset.messageId = msg.id;
+      messageDiv.innerHTML = renderMessageContent(msg, showAuthor);
+      applyReplyLinkBehavior(messageDiv);
+      return messageDiv;
+    }
+    
+    function updateMessage(msg) {
+      const messageDiv = document.querySelector(`[data-message-id="${msg.id}"]`);
+      if (!messageDiv) {
+        console.error("Message div not found for ID:", msg.id);
+        return;
+      }
+      messageDiv.innerHTML = renderMessageContent(msg);
+      applyReplyLinkBehavior(messageDiv);
+    }
+    
+    socket.on('newMessage', (msg) => {
+      const messageList = document.getElementById('messageList');
+      const messageDiv = renderMessage(msg);
+      messageList.appendChild(messageDiv);
+      messageList.scrollTop = messageList.scrollHeight;
+    });
+    
+    socket.on('updateMessage', (msg) => {
+      console.log("Message update received:", msg);
+      updateMessage(msg);
+    });
+
+    document.getElementById('sendButton').addEventListener('click', async function() {
+      
+      const messageTextarea = document.getElementById('messageTextarea');
+      const attachmentInput = document.getElementById('attachmentInput');
+      const guildSelect = document.getElementById('guildSelect');
+      const channelSelect = document.getElementById('channelSelect');
+      const responseMessage = document.getElementById('responseMessage');
+      const sendButton = document.getElementById('sendButton');
+      const sendingIndicator = document.getElementById('sendingIndicator');
+    
+      if (messageTextarea.value.trim() === '' && attachmentInput.files.length === 0) {
+        responseMessage.textContent = 'Message or attachment required.';
+        return;
+      }
+    
+      // Disable send button and show sending indicator
+      sendButton.disabled = true;
+      sendingIndicator.style.display = 'inline-block';
+
+      const data = new FormData();
+      data.append('guildId', guildSelect.value);
+      data.append('channelId', channelSelect.value);
+      data.append('message', messageTextarea.value);
+    
+      for (let file of attachmentInput.files) {
+        data.append('attachments', file);
+      }
+    
+      responseMessage.textContent = '';
+      messageTextarea.value = '';
+      attachmentInput.value = '';
+      autoResizeTextarea(messageTextarea);
+    
+      const response = await fetch('/send-message', {
+        method: 'POST',
+        body: data
+      });
+    
+      const result = await response.json();
+      responseMessage.textContent = result.message;
+    
+      if (response.ok) {
+        document.getElementById('attachmentCounter').textContent = '0';
+        document.getElementById('previewContainer').innerHTML = '';
+      }
+    
+      setTimeout(() => {
+        responseMessage.textContent = '';
+      }, 1000);
+      
+      sendButton.disabled = false;
+      sendingIndicator.style.display = 'none';
+    });
+
+    const toggleSidebarButton = document.getElementById('toggleSidebarButton');
+    const sidebar = document.querySelector('.sidebar');
+    
+    toggleSidebarButton.addEventListener('click', function() {
+      sidebar.classList.toggle('hidden');
+    });
+    
+    function autoResizeTextarea(textarea) {
+      textarea.style.height = '40px';
+      if (textarea.scrollHeight > textarea.clientHeight) {
+        textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
+      }
+    }
+    
+    messageTextarea.addEventListener('input', function() {
+      autoResizeTextarea(messageTextarea);
+    });
+    
+    autoResizeTextarea(messageTextarea);
+  </script>
+</body>
+</html>

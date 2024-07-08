@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "body-parser": "*",
+    "discord.js": "*",
+    "dotenv": "*",
+    "ejs": "*",
+    "express": "*",
+    "express-rate-limit": "*",
+    "express-session": "*",
+    "http": "*",
+    "multer": "*",
+    "passport": "*",
+    "passport-discord": "*",
+    "socket.io": "*",
+    "uuid": "*"
+  }
+}
